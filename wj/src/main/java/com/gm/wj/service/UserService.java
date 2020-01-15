@@ -39,6 +39,7 @@ public class UserService {
         return userDAO.findByUsername(username);
     }
 
+    // $$$WCH: this method is not used
     public User get(String username, String password){
         return userDAO.getByUsernameAndPassword(username, password);
     }

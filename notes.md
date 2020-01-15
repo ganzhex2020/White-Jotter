@@ -158,9 +158,11 @@ Vue.prototype.$axios=axios;
           })
 ```
 
-上面例子，js 访问 URL 的全称为：http://localhost:8443/api/login
+上面例子，js 访问 URL 的全称为：`http://localhost:8443/api/login`
 
-另外参考 [axios.defaults.baseURL 的三种配置方法](https://blog.csdn.net/weixin_41023528/article/details/89886735)
+另外参考 
+- [Vue.js Ajax(axios) 教程](https://www.runoob.com/vue2/vuejs-ajax-axios.html)
+- [axios.defaults.baseURL 的三种配置方法](https://blog.csdn.net/weixin_41023528/article/details/89886735)
 
 ### 编写页面对应的 vue 组件文件
 
@@ -198,3 +200,60 @@ public class LoginController {
     public Result login(@RequestBody User requestUser) {
     ......
 ```
+
+### 什么叫 POJO 类
+
+[什么是POJO，JavaBean？](https://www.jianshu.com/p/6f3e2bd50cb1)
+
+POJO：一个简单的Java类，这个类没有实现/继承任何特殊的java接口或者类，不遵循任何主要java模型，约定或者框架的java对象。在理想情况下，POJO不应该有注解。
+
+### @requestBody
+
+@requestBody 注解常用来处理 content-type 不是默认的 application/x-www-form-urlcoded 编码的内容，比如说：application/json 或者是 application/xml 等。一般情况下来说常用其来处理 application/json 类型。
+
+# 数据库的引入
+
+
+- @Entity ：表示这是一个实体类
+- @Table(name = "user")：表示对应的表名是 user
+- @JsonIgnoreProperties({"handler","hibernateLazyInitializer"})：因为是做前后端分离，而前后端数据交互用的是 json 格式。 那么 User 对象就会被转换为 json 数据。 而本项目使用 jpa 来做实体类的持久化，jpa 默认会使用 hibernate, 在 jpa 工作过程中，就会创造代理类来继承 User ，并添加 handler 和 hibernateLazyInitializer 这两个无须 json 化的属性，所以这里需要用 JsonIgnoreProperties 把这两个属性忽略掉。
+- @Id：标注用于声明一个实体类的属性映射为数据库的主键列。该属性通常置于属性声明语句之前，可与声明语句同行，也可写在单独行上。 @Id标注也可置于属性的getter方法之前。
+- @GeneratedValue：用于标注主键的生成策略，通过 strategy 属性指定。默认情况下，JPA 动选择一个最适合底层数据库的主键生成策略：SqlServer对应identity，MySQL 对应 auto increment。 在 javax.persistence.GenerationType 中定义了以下几种可供选择的策略： 
+	- IDENTITY 采用数据库ID自增长的方式来自增主键字段，Oracle 不支持这种方式； 
+	- AUTO： JPA自动选择合适的策略，是默认选项； 
+	- SEQUENCE：通过序列产生主键，通过@SequenceGenerator 注解指定序列名，MySql不支持这种方式 
+	- TABLE：通过表产生主键，框架借由表模拟序列产生主键，使用该策略可以使应用更易于数据库移植。
+- @Column注解来标识实体类中属性与数据表中字段的对应关系。
+
+所以代码中的以下三行注解都是针对 `int id` 这个属性的说明
+
+```
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    int id;
+```
+
+JPA
+```
+public interface UserDAO extends JpaRepository<User,Integer> {
+    User findByUsername(String username);
+
+    User getByUsernameAndPassword(String username,String password);
+}
+```
+
+JPA 提供了一套语法让我们不用写SQL函数，只需要按照一定的规则定义函数名字就可以实现SQL
+
+这里 find 还是 get 这些动词都不重要，建议用 find。关键是By后面的
+
+也可以自己定义
+
+```
+@Query(value = "select new User(u.id,u.username,u.name,u.phone,u.email,u.enabled) from User u")
+    List<User> list();
+```
+
+UserService
+
+这里实际上是对 UserDAO 进行了二次封装，一般来讲，我们在 DAO 中只定义基础的增删改查操作，而具体的操作，需要由 Service 来完成。当然，由于我们做的操作原本就比较简单，所以这里看起来只是简单地重命名了一下，比如把 “通过用户名及密码查询并获得对象” 这种方法命名为 get。

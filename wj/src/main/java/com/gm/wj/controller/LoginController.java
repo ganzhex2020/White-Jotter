@@ -28,6 +28,7 @@ public class LoginController {
     @PostMapping(value = "/api/login")
     public Result login(@RequestBody User requestUser) {
         String username = requestUser.getUsername();
+        // 对 html 标签进行转义，防止 XSS 攻击
         username = HtmlUtils.htmlEscape(username);
 
         Subject subject = SecurityUtils.getSubject();
@@ -36,6 +37,10 @@ public class LoginController {
         usernamePasswordToken.setRememberMe(true);
         try {
             User user = userService.findByUserName(username);
+            if (null == user) {
+                String message = "该用户不存在";
+                return ResultFactory.buildFailResult(message);
+            }
             if (!user.isEnabled()) {
                 String message = "该用户已被禁用";
                 return ResultFactory.buildFailResult(message);
