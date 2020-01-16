@@ -1,14 +1,28 @@
 ﻿[Vue + Spring Boot 项目实战](https://blog.csdn.net/Neuf_Soleil/article/details/88925013)
 
+# bug known
+- 上传图片时，会走进 onPreHandle 的逻辑并打印 “需要登录”，导致上传失败，而且前端也没有反应。关键是我已经登录的
 
-- 如何从 0 开始搭建 Web 项目？
-- 什么是前后端分离？如何实现前后端分离？
-- 单页面应用有哪些特点？
-- 如何在 Web 项目中使用数据库并利用网页实现增删改查？
+
+
+# 需要学习的内容
+
+通过第一部分的学习，我们学到了什么？
+
+- 如何从 0 开始搭建 Web 项目（包括前端和后端）？
+- 什么是前后端分离？前后端分离带来的挑战有哪些（跨域问题）？如何实现前后端分离？
+- 前后端如何配合实现一个基本的功能服务 - 以登录为例
+- 如何在 Web 项目中使用数据库（基于 JPA）并利用网页实现增删改查？
+- 前端开发涉及的 Hash 模式和 History 模式
+- 如何在前端实现页面拦截？
+- 如何基于 Vue 以及利用 Element 开发单页面前端？
+    - 导航栏
+    - 图书管理页面的设计（包括如何展示图书，如何分类导航，如何搜索，页码）
+
 - 在开发中如何利用各种辅助手段？
 - Vue.js 的基本概念与用法
 - 简单的前端页面设计
-- 如何部署 Web 应用？
+
 
 项目的第二部分是后台管理模块的开发，主要包括以下内容：
 
@@ -57,7 +71,9 @@
 
 ### 命令行方式（TBD）
 
-# 什么叫 “前后端分离”
+# “前后端分离” 开发的那些事
+
+## 什么叫 “前后端分离”
 
 在开发的时候，前端用前端的服务器（Ngix），后端用后端的服务器（Tomcat），使用自己独立的服务部署。
 
@@ -71,17 +87,19 @@
 
 反向代理就是，用户不需要知道 A 的地址，只有 B 知道，当你访问 B 的时候，“B” 发现有些网页它没有，但 A 上有，于是 B 就取回“A”的内容给你看。作为用户的你，是不知道有这个过程的，这么做是为了保护服务器 A，不暴露服务器A的真实地址。
 
-# 前后端结合开发的总结
-
-## 前端要做的事情：
-
-### 解决跨域问题
+## 解决跨域问题
 
 前端部署在 localhost:8080；后端部署在 localhost:8443， 自然存在所谓的跨域问题
 
 为了解决跨域问题，需要在前端和后端都做相应的调整，这里先说前端的
 
-#### 在生产环境中
+### 前端要做的事情：
+
+#### 代理设置
+
+代理的设置方法分针对生产环境还是开发环境
+
+##### 在生产环境中
 
 通过 nginx 的配置实现跨域部署
 
@@ -96,7 +114,7 @@
 
 更具体的行为还需要了解 nginx 的一些知识。
 
-#### 在开发环境中
+##### 在开发环境中
 
 可以通过在修改 `config\index.js` 中的 proxyTable 来
 
@@ -117,7 +135,7 @@
 由于我们是在开发环境下使用，自然而然是要配置在 config/index.js 的dev里面：
 - [Vue-cli proxyTable 解决开发环境的跨域问题](https://www.jianshu.com/p/95b2caf7e0da)
 
-### 引入 axios
+#### 前端访问后端：引入 axios
 
 在前端 js 代码中会发送请求访问后端的地址链接 url。可以采用多种机制，axios是其中一种。
 
@@ -164,9 +182,9 @@ Vue.prototype.$axios=axios;
 - [Vue.js Ajax(axios) 教程](https://www.runoob.com/vue2/vuejs-ajax-axios.html)
 - [axios.defaults.baseURL 的三种配置方法](https://blog.csdn.net/weixin_41023528/article/details/89886735)
 
-### 编写页面对应的 vue 组件文件
+#### 编写页面对应的 vue 组件文件
 
-### 配置页面路由
+#### 配置页面路由
 
 将页面 vue 组件文件添加到 `src\router\index.js`
 
@@ -180,11 +198,9 @@ Vue.prototype.$axios=axios;
 },
 ```
 
-## 后端要做的事情
+### 后端要做的事情
 
-### 后端中涉及跨域的问题的处理
-
-相对前端，后端要做的事情比较简单
+后端中涉及跨域的问题的处理，相对前端，后端要做的事情比较简单
 
 在前端 js 代码中会请求访问后端的地址链接 url。我们在前端的服务器 nginx 中要请求后端 Tomcat 中的这个 url，这就是跨域请求，为了支持前端的跨域请求则后台代码也要允许跨域，这里我们最简单的方法是使用 springMVC 的注解 @CrossOrigin(origins = "*", maxAge = 3600)。  ，这里要强调的是springMVC的版本要在4.2或以上版本才支持@CrossOrigin，我这里的设置是允许所有跨域访问，也可以单独指定允许的服务器跨域（设置origin的值便可）。
 
@@ -201,65 +217,9 @@ public class LoginController {
     ......
 ```
 
-### 什么叫 POJO 类
+# 前端开发中要注意的事情
 
-[什么是POJO，JavaBean？](https://www.jianshu.com/p/6f3e2bd50cb1)
-
-POJO：一个简单的Java类，这个类没有实现/继承任何特殊的java接口或者类，不遵循任何主要java模型，约定或者框架的java对象。在理想情况下，POJO不应该有注解。
-
-### @requestBody
-
-@requestBody 注解常用来处理 content-type 不是默认的 application/x-www-form-urlcoded 编码的内容，比如说：application/json 或者是 application/xml 等。一般情况下来说常用其来处理 application/json 类型。
-
-# 数据库的引入
-
-
-- @Entity ：表示这是一个实体类
-- @Table(name = "user")：表示对应的表名是 user
-- @JsonIgnoreProperties({"handler","hibernateLazyInitializer"})：因为是做前后端分离，而前后端数据交互用的是 json 格式。 那么 User 对象就会被转换为 json 数据。 而本项目使用 jpa 来做实体类的持久化，jpa 默认会使用 hibernate, 在 jpa 工作过程中，就会创造代理类来继承 User ，并添加 handler 和 hibernateLazyInitializer 这两个无须 json 化的属性，所以这里需要用 JsonIgnoreProperties 把这两个属性忽略掉。
-- @Id：标注用于声明一个实体类的属性映射为数据库的主键列。该属性通常置于属性声明语句之前，可与声明语句同行，也可写在单独行上。 @Id标注也可置于属性的getter方法之前。
-- @GeneratedValue：用于标注主键的生成策略，通过 strategy 属性指定。默认情况下，JPA 动选择一个最适合底层数据库的主键生成策略：SqlServer对应identity，MySQL 对应 auto increment。 在 javax.persistence.GenerationType 中定义了以下几种可供选择的策略： 
-	- IDENTITY 采用数据库ID自增长的方式来自增主键字段，Oracle 不支持这种方式； 
-	- AUTO： JPA自动选择合适的策略，是默认选项； 
-	- SEQUENCE：通过序列产生主键，通过@SequenceGenerator 注解指定序列名，MySql不支持这种方式 
-	- TABLE：通过表产生主键，框架借由表模拟序列产生主键，使用该策略可以使应用更易于数据库移植。
-- @Column注解来标识实体类中属性与数据表中字段的对应关系。
-
-所以代码中的以下三行注解都是针对 `int id` 这个属性的说明
-
-```
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    int id;
-```
-
-JPA
-```
-public interface UserDAO extends JpaRepository<User,Integer> {
-    User findByUsername(String username);
-
-    User getByUsernameAndPassword(String username,String password);
-}
-```
-
-JPA 提供了一套语法让我们不用写SQL函数，只需要按照一定的规则定义函数名字就可以实现SQL
-
-这里 find 还是 get 这些动词都不重要，建议用 find。关键是By后面的
-
-也可以自己定义
-
-```
-@Query(value = "select new User(u.id,u.username,u.name,u.phone,u.email,u.enabled) from User u")
-    List<User> list();
-```
-
-UserService
-
-这里实际上是对 UserDAO 进行了二次封装，一般来讲，我们在 DAO 中只定义基础的增删改查操作，而具体的操作，需要由 Service 来完成。当然，由于我们做的操作原本就比较简单，所以这里看起来只是简单地重命名了一下，比如把 “通过用户名及密码查询并获得对象” 这种方法命名为 get。
-
-
-# Vue 中路由的 Hash 模式和 Histroy 模式
+## 去掉 URL 中的 “#” - Hash 模式和 Histroy 模式
 
 如果采用 Hash 模式，访问页面的时候需要使用形如 `localhost:8080/#/login` 的写法，不太好看
 
@@ -267,7 +227,9 @@ UserService
 
 参考的 https://learner.blog.csdn.net/article/details/89422585
 
-# 页面拦截
+## 页面拦截（主要在前端实现）
+
+参考 https://learner.blog.csdn.net/article/details/89422585
 
 限制未登录状态下对核心功能页面的访问，我的理解是这里的拦截就是防止用户在未登录的情况下随意输入二级路径，从而访问到一些重要的页面。
 
@@ -275,9 +237,20 @@ UserService
 
 实现前端登录器，需要在前端判断用户的登录状态。我们可以像之前那样在组件的 data 中设置一个状态标志，但登录状态应该被视为一个全局属性，而不应该只写在某一组件中。所以我们需要引入一个新的工具——Vuex，它是专门为 Vue 开发的状态管理方案，我们可以把需要在各个组件中传递使用的变量、方法定义在这里。
 
-https://learner.blog.csdn.net/article/details/89422585
-
 针对前端的登录拦截主要实现以下逻辑：
+
+### 采用 vuex 技术保存全局的登录状态
+
+这里我们还用到了 localStorage，即本地存储，在项目打开的时候会判断本地存储中是否有 user 这个对象存在，如果存在就取出来并获得 username 的值，否则则把 username 设置为空。这样我们只要不清除缓存，登录的状态就会一直保存。
+
+参考：
+- [Vue.js——十分钟入门Vuex](https://www.jianshu.com/p/a804606ad8e9)
+
+### 修改路由配置，指定哪些页面需要拦截
+
+为了区分页面是否需要拦截，我们需要修改一下 src\router\index.js，在需要拦截的路由中加一条元数据，设置一个 requireAuth 字段
+
+### 编写拦截（包括恢复）逻辑
 
 ```
 if (登录不是 login 页面，即是需要拦截的页面) {
@@ -307,6 +280,182 @@ if (应答 ok) {
 - https://blog.csdn.net/saucxs/article/details/93669641
 - https://blog.csdn.net/sky786905664/article/details/73920725
 
-# Vuex
+# 后端开发那些事
 
-[Vue.js——十分钟入门Vuex](https://www.jianshu.com/p/a804606ad8e9)
+## 控制器 Controller 开发的那些事情
+
+目前主要涉及 HTTP 底层的一些概念，在编码上涉及一些注解的使用
+
+
+- @RequestBody：常用来处理 content-type 不是默认的 application/x-www-form-urlcoded 编码的内容，比如说：application/json 或者是 application/xml 等。一般情况下来说常用其来处理 application/json 类型。
+- @ResponseBody：如果需要返回 JSON，XML或自定义 mediaType 内容到页面，则需要在对应的方法上加上 @ResponseBody 注解
+
+- @GetMapping：是一个组合注解，是@RequestMapping(method = RequestMethod.GET)的缩写。
+- @PostMapping：是一个组合注解，是@RequestMapping(method = RequestMethod.POST)的缩写。
+
+- @RestController：相当于 @ResponseBody ＋ @Controller合在一起的作用。如果需要返回 JSON，XML或自定义 mediaType 内容到页面，则需要在对应的方法上加上 @ResponseBody 注解，所以对于返回 JSON 格式的，我们都会对该 controller 类加上 @RestController 
+
+- @Autowired：我们编写 spring 框架的代码时候。一直遵循是这样一个规则：所有在 spring 中注入的 bean 都建议定义成私有的域变量。并且要配套写上 get 和 set方法。Spring 2.5 引入了 @Autowired 注释，它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。 通过 @Autowired的使用来消除 set ，get方法。
+
+## WebMvcConfigurer 的使用
+
+这是一个接口（快捷键 CTRL+O , 会提示所有需要实现的接口），web的配置都可以在这类里面
+
+参考
+[SpringBoot系列——WebMvcConfigurer介绍](https://segmentfault.com/a/1190000019448892)
+
+
+
+
+# 数据库的引入
+
+## 数据库的配置部分
+
+这些背后意味着什么，TBD
+
+### POM 文件配置
+
+### application.properties 配置
+
+## 代码实现部分
+
+### 数据 pojo 对象
+
+设计一个 pojo 类与表中的记录对应
+
+我的理解，必要的话一个表可能会对应多个 pojo，但一般来讲是一对一的
+
+- @Entity ：表示这是一个实体类
+- @Table(name = "user")：表示对应的表名是 user
+- @JsonIgnoreProperties({"handler","hibernateLazyInitializer"})：因为是做前后端分离，而前后端数据交互用的是 json 格式。 那么 User 对象就会被转换为 json 数据。 而本项目使用 jpa 来做实体类的持久化，jpa 默认会使用 hibernate, 在 jpa 工作过程中，就会创造代理类来继承 User ，并添加 handler 和 hibernateLazyInitializer 这两个无须 json 化的属性，所以这里需要用 JsonIgnoreProperties 把这两个属性忽略掉。
+- @Id：标注用于声明一个实体类的属性映射为数据库的主键列。该属性通常置于属性声明语句之前，可与声明语句同行，也可写在单独行上。 @Id标注也可置于属性的getter方法之前。
+- @GeneratedValue：用于标注主键的生成策略，通过 strategy 属性指定。默认情况下，JPA 动选择一个最适合底层数据库的主键生成策略：SqlServer对应identity，MySQL 对应 auto increment。 在 javax.persistence.GenerationType 中定义了以下几种可供选择的策略： 
+	- IDENTITY 采用数据库ID自增长的方式来自增主键字段，Oracle 不支持这种方式； 
+	- AUTO： JPA自动选择合适的策略，是默认选项； 
+	- SEQUENCE：通过序列产生主键，通过@SequenceGenerator 注解指定序列名，MySql不支持这种方式 
+	- TABLE：通过表产生主键，框架借由表模拟序列产生主键，使用该策略可以使应用更易于数据库移植。
+- @Column注解来标识实体类中属性与数据表中字段的对应关系。
+
+所以代码中的以下三行注解都是针对 `int id` 这个属性的说明
+
+```
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
+    int id;
+```
+### UserDAO
+
+封装和简化 SQL 对 DB 的访问
+
+Data Access Object（数据访问对象，DAO）即用来操作数据库的对象，这个对象可以是我们自己开发的，也可以是框架提供的。这里我们通过继承 JpaRepository 的方式构建 DAO。
+
+```
+public interface UserDAO extends JpaRepository<User,Integer> {
+    User findByUsername(String username);
+
+    User getByUsernameAndPassword(String username,String password);
+}
+```
+
+JPA 提供了一套语法让我们不用写 SQL 函数，只需要按照一定的规则定义函数名字就可以实现SQL
+
+这里 find 还是 get 这些动词都不重要，建议用 find。关键是By后面的
+
+也可以自己定义
+
+```
+@Query(value = "select new User(u.id,u.username,u.name,u.phone,u.email,u.enabled) from User u")
+    List<User> list();
+```
+
+### 数据服务类 UserService
+
+这里实际上是对 UserDAO 进行了二次封装，一般来讲，我们在 DAO 中只定义基础的增删改查操作，而具体的操作，需要由 Service 来完成。当然，由于我们做的操作原本就比较简单，所以这里看起来只是简单地重命名了一下，比如把 “通过用户名及密码查询并获得对象” 这种方法命名为 get。
+
+Service 提供的接口由 Controller 来调用
+
+层次关系如下，中间传递的是 Pojo 数据对象
+
+Controller -> Service -> DAO
+
+
+## 数据库的进一步开发（设计与增删改查）
+
+### 外键
+book 表在 cid 上有一个外键
+
+对应代码上：
+
+```
+public class Book {
+
+    ......
+    
+    @ManyToOne
+    @JoinColumn(name="cid")
+    private Category category;
+    
+    ......
+```
+
+### SQL 中的 like
+```
+public interface BookDAO extends JpaRepository<Book,Integer> {
+    ......
+    List<Book> findAllByTitleLikeOrAuthorLike(String keyword1, String keyword2);
+}
+```
+等价于 “where title like keyword1 or authoer like keyword2”
+
+LIKE 操作符用于在 WHERE 子句中搜索列中的指定模式。
+
+keyword1 中可以带通配符 “%”
+
+譬如：
+- 'N%' 表示 “以 "N" 开始的”
+- '%g' 表示 “以 "g" 结尾的” 
+- '%lon%' 表示 “包含 "lon" 的”
+
+参考调用该函数的代码：
+
+```
+bookDAO.findAllByTitleLikeOrAuthorLike('%' + keywords + '%', '%' + keywords + '%');
+```
+
+## JPA 提供的默认方法
+
+CategoryDAO 中不需要额外构造的方法，参考代码：
+
+```
+public interface CategoryDAO extends JpaRepository<Category, Integer> {
+
+}
+```
+
+参考 [Spring Data JPA ——默认方法使用](https://segmentfault.com/a/1190000011067941)
+
+## JPA 中 save 的使用
+
+```
+public void addOrUpdate(Book book) {
+        bookDAO.save(book);
+}
+```
+这里注意一下 save() 方法的作用是，当主键存在时更新数据，当主键不存在时插入数据。
+
+# Java 的总结
+
+## 什么叫 POJO 类
+
+[什么是POJO，JavaBean？](https://www.jianshu.com/p/6f3e2bd50cb1)
+
+POJO：一个简单的Java类，这个类没有实现/继承任何特殊的java接口或者类，不遵循任何主要java模型，约定或者框架的java对象。在理想情况下，POJO不应该有注解。
+
+## java 中 “orElse()” 的用法
+
+当 optional值不存在时，调用 orElse() 返回 orElse() 的参数，如果 optional 的值存在时返回 optional 的值
+
+参考：
+- [理解、学习与使用 JAVA 中的 OPTIONAL](https://www.cnblogs.com/zhangboyu/p/7580262.html)
+- [Java Optional 的 orElse() 和 orElseGet() 的区别](https://www.jianshu.com/p/f256b54b8309)
