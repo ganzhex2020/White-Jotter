@@ -18,13 +18,14 @@
 - 如何基于 Vue 以及利用 Element 开发单页面前端？
     - 导航栏
     - 图书管理页面的设计（包括如何展示图书，如何分类导航，如何搜索，页码）
-
-- 在开发中如何利用各种辅助手段？
-- Vue.js 的基本概念与用法
-- 简单的前端页面设计
+    - 针对图书的增删改查的实现
+- 如何实现文件上传（这里实现的是图片文件），前端和后端都会涉及
+- 如何在生产环境或者开发环境对前后端进行部署
 
 
 项目的第二部分是后台管理模块的开发，主要包括以下内容：
+
+安全问题
 
 - 后台管理模块的常见功能与布局（内容管理、用户/权限管理、运维监控）
 - 用户身份验证、授权、会话管理与信息加密存储
@@ -217,9 +218,30 @@ public class LoginController {
     ......
 ```
 
-# 前端开发中要注意的事情
+在最终的代码中（github），为了避免在所有的 controller 上都添加 `@CrossOrigin` 注解，采用的方法是在 MyWebConfigurer 中统一使用 addCorsMappings 配置跨域
 
-## 去掉 URL 中的 “#” - Hash 模式和 Histroy 模式
+```
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        //所有请求都允许跨域，使用这种配置方法就不能在 interceptor 中再配置 header 了
+        registry.addMapping("/**")
+                .allowCredentials(true)
+                .allowedOrigins("http://localhost:8080")
+                .allowedMethods("POST", "GET", "PUT", "OPTIONS", "DELETE")
+                .allowedHeaders("*")
+                .maxAge(3600);
+    }
+```
+
+但需要注意的是代码中注释说 “//所有请求都允许跨域，使用这种配置方法就不能在 interceptor 中再配置 header 了”， 还不是很理解，TBD
+找了一些参考资料留着后面看
+
+- [[心得]SpringBoot使用addCorsMappings配置跨域的坑](https://segmentfault.com/a/1190000018018849)
+- [springboot中通过cors协议解决跨域问题](https://www.cnblogs.com/520playboy/p/7306008.html)
+
+# 去掉 URL 中的 “#” - Hash 模式和 Histroy 模式
+
+缺省使用 Hash 模式，注意地址是 `localhost:8080/#/login` ，中间有这个 `#` 是因为 Vue 的路由使用了 Hash 模式，是单页面应用的经典用法，但连尤雨溪本人都觉得不太好看，所以可以在路由配置中选择使用 History 模式
 
 如果采用 Hash 模式，访问页面的时候需要使用形如 `localhost:8080/#/login` 的写法，不太好看
 
@@ -227,7 +249,7 @@ public class LoginController {
 
 参考的 https://learner.blog.csdn.net/article/details/89422585
 
-## 页面拦截（主要在前端实现）
+# 页面拦截（主要在前端实现）
 
 参考 https://learner.blog.csdn.net/article/details/89422585
 
@@ -296,16 +318,6 @@ if (应答 ok) {
 - @RestController：相当于 @ResponseBody ＋ @Controller合在一起的作用。如果需要返回 JSON，XML或自定义 mediaType 内容到页面，则需要在对应的方法上加上 @ResponseBody 注解，所以对于返回 JSON 格式的，我们都会对该 controller 类加上 @RestController 
 
 - @Autowired：我们编写 spring 框架的代码时候。一直遵循是这样一个规则：所有在 spring 中注入的 bean 都建议定义成私有的域变量。并且要配套写上 get 和 set方法。Spring 2.5 引入了 @Autowired 注释，它可以对类成员变量、方法及构造函数进行标注，完成自动装配的工作。 通过 @Autowired的使用来消除 set ，get方法。
-
-## WebMvcConfigurer 的使用
-
-这是一个接口（快捷键 CTRL+O , 会提示所有需要实现的接口），web的配置都可以在这类里面
-
-参考
-[SpringBoot系列——WebMvcConfigurer介绍](https://segmentfault.com/a/1190000019448892)
-
-
-
 
 # 数据库的引入
 
@@ -459,3 +471,39 @@ POJO：一个简单的Java类，这个类没有实现/继承任何特殊的java�
 参考：
 - [理解、学习与使用 JAVA 中的 OPTIONAL](https://www.cnblogs.com/zhangboyu/p/7580262.html)
 - [Java Optional 的 orElse() 和 orElseGet() 的区别](https://www.jianshu.com/p/f256b54b8309)
+
+# 如何实现文件上传（这里实现的是图片文件）
+
+前端利用  element 提供的组件 <el-upload> ，具体参考 https://element.eleme.cn/#/zh-CN/component/upload
+
+后端要做的事情是：
+- 接收前端传来的图片数据，保存在服务器的一个目录下
+- 每个文件重名一个随机数的名字（这么做是为了避免重名，图片资源的名字很可能重复，如不修改可能出现问题）并构造一个 URL 返回给前端，数据库中存放图片的 URL 路径
+
+譬如我们上传的是 aaa.jpg，处理后改个名字叫 zir7rr， 放在 `D:/workspace/img` 下，生成的 URL 是 `http://localhost:8443/api/file/zir7rr`
+
+在 `config\MyWebConfigurer` 中添加如下代码, 把 `/api/file` 和 `file:d:/workspace/img` 对应起来
+
+```
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/api/file/**").addResourceLocations("file:" + "d:/workspace/img/");
+    }
+```
+
+这里涉及到 WebMvcConfigurer 的使用，这是一个接口（快捷键 CTRL+O , 会提示所有需要实现的接口），web的配置都可以在这类里面
+
+参考
+[SpringBoot系列——WebMvcConfigurer介绍](https://segmentfault.com/a/1190000019448892)
+
+# 基于 Shiro 安全框架实现认证，授权，加密和会话管理
+
+https://www.w3cschool.cn/shiro/
+
+
+
+[如何保证用户登录时提交密码已经加密？](https://www.zhihu.com/question/20060155)
+
+[Springboot整合Shiro：简洁的身份认证](https://www.jianshu.com/p/a711961b07db)
+
+Shiro 身份验证 springboot
